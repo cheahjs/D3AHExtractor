@@ -12,14 +12,24 @@ namespace D3AHExtractor
 {
     class Program
     {
-        static Regex price = new Regex(@"last 10 trades: (\d+) p", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        static Regex rmahprice = new Regex(@"last 10 trades: (\$\d+(,\d+)?\.\d+) p", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex price = new Regex(@"last 10 trades: (\d+) p",
+                                               RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static Regex rmahprice = new Regex(@"last 10 trades: (\$\d+(,\d+)?\.\d+) p",
+                                                   RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static FileSystemWatcher watcher;
+
+        private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
 
         static void Main(string[] args)
         {
             var path = args.Length == 0 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Diablo III\Screenshots" : args[0];
+            if (args.Length == 3)
+            {
+                Size = new Rectangle(int.Parse(args[1].Split('x')[0]), int.Parse(args[1].Split('x')[1]),
+                                     int.Parse(args[2].Split('x')[0]), int.Parse(args[2].Split('x')[1]));
+            }
             Console.WriteLine("Registering filesystem events. ({0})", path);
             watcher = new FileSystemWatcher(path, "*.jpg");
             watcher.BeginInit();
@@ -69,13 +79,13 @@ namespace D3AHExtractor
 
         static Bitmap CropImage(Bitmap data)
         {
-            var retn = new Bitmap(400, 100);
+            var retn = new Bitmap(Size.Size.Width, Size.Size.Height);
             int w1 = 0;
             int h1 = 0;
-            for (int w = 472; w < 872; w++, w1++)
+            for (int w = Size.X; w < Size.X + retn.Width; w++, w1++)
             {
                 h1 = 0;
-                for (int h = 388; h < 488; h++, h1++)
+                for (int h = Size.Y; h < Size.Y + retn.Height; h++, h1++)
                 {
                     retn.SetPixel(w1, h1, data.GetPixel(w, h));
                 }
