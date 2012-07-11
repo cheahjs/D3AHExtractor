@@ -44,35 +44,44 @@ namespace D3AHExtractor
 
         private static void WatcherOnCreated(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine("New file created: {0}", Path.GetFileName(e.FullPath));
-            var croppath = CropAndSave(e.FullPath);
-            var stream = File.OpenRead(croppath);
-            var cropbmp = (Bitmap)Bitmap.FromStream(stream);
-            var itemname = MatchItem(cropbmp);
-            stream.Close();
-            if (itemname == "")
+            try
             {
-                Console.WriteLine("{0} does not match any known items.", Path.GetFileNameWithoutExtension(e.FullPath));
-                return;
+                Console.WriteLine("New file created: {0}", Path.GetFileName(e.FullPath));
+                var croppath = CropAndSave(e.FullPath);
+                var stream = File.OpenRead(croppath);
+                var cropbmp = (Bitmap) Bitmap.FromStream(stream);
+                var itemname = MatchItem(cropbmp);
+                stream.Close();
+                if (itemname == "")
+                {
+                    Console.WriteLine("{0} does not match any known items.",
+                                      Path.GetFileNameWithoutExtension(e.FullPath));
+                    return;
+                }
+                var ocrtext = OCRFile(croppath);
+                var price = GetPrice(ocrtext);
+                if (price == "")
+                {
+                    Console.WriteLine("Could not extract price information from {0}({1}).\nOCR text:\n{2}",
+                                      Path.GetFileNameWithoutExtension(e.FullPath), itemname,
+                                      ocrtext);
+                    return;
+                }
+                Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price,
+                                  File.GetCreationTimeUtc(e.FullPath));
+                var writeline = string.Format("{0} - {1} - {2}\n",
+                                              DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname,
+                                              price);
+                File.AppendAllText("priceinfo.txt", writeline);
             }
-            var ocrtext = OCRFile(croppath);
-            var price = GetPrice(ocrtext);
-            if (price == "")
+            catch (Exception)
             {
-                Console.WriteLine("Could not extract price information from {0}({1}).\nOCR text:\n{2}",
-                                  Path.GetFileNameWithoutExtension(e.FullPath), itemname,
-                                  ocrtext);
-                return;
             }
-            Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price, File.GetCreationTimeUtc(e.FullPath));
-            var writeline = string.Format("{0} - {1} - {2}\n",
-                                          DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname, price);
-            File.AppendAllText("priceinfo.txt", writeline);
         }
 
         static string CropAndSave(string path)
         {
-            CropImage(new Bitmap(path)).Save(Path.ChangeExtension(path, "_autocrop.tif"), ImageFormat.Tiff);
+                CropImage(new Bitmap(path)).Save(Path.ChangeExtension(path, "_autocrop.tif"), ImageFormat.Tiff);
             return Path.ChangeExtension(path, "_autocrop.tif");
         }
 
@@ -104,8 +113,11 @@ namespace D3AHExtractor
         {
             var match = price.Match(data);
             if (!match.Success)
+            {
                 match = rmahprice.Match(data);
-            return match.Success ? match.Groups[1].Value : "";
+                return match.Success ? match.Groups[1].Value : "";
+            }
+            return new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, "");
         }
         
         static string MatchItem(Bitmap image)
