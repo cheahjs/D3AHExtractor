@@ -15,10 +15,13 @@ namespace D3AHExtractor
         static Regex price = new Regex(@"last 10 trades: (\d+) p", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         static Regex rmahprice = new Regex(@"last 10 trades: (\$\d+(,\d+)?\.\d+) p", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        static FileSystemWatcher watcher = new FileSystemWatcher(@"C:\Users\Deathmax\Documents\Diablo III\Screenshots", "*.jpg");
+        private static FileSystemWatcher watcher;
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Registering filesystem events.");
+            var path = args.Length == 0 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Diablo III\Screenshots" : args[1];
+            Console.WriteLine("Registering filesystem events. ({0})", path);
+            watcher = new FileSystemWatcher(path, "*.jpg");
             watcher.BeginInit();
             watcher.EnableRaisingEvents = true;
             watcher.Created += WatcherOnCreated;
