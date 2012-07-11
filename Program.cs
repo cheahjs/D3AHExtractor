@@ -81,7 +81,7 @@ namespace D3AHExtractor
 
         static string CropAndSave(string path)
         {
-                CropImage(new Bitmap(path)).Save(Path.ChangeExtension(path, "_autocrop.tif"), ImageFormat.Tiff);
+            CropImage(new Bitmap(path)).Save(Path.ChangeExtension(path, "_autocrop.tif"), ImageFormat.Tiff);
             return Path.ChangeExtension(path, "_autocrop.tif");
         }
 
@@ -115,9 +115,11 @@ namespace D3AHExtractor
             if (!match.Success)
             {
                 match = rmahprice.Match(data);
-                return match.Success ? match.Groups[1].Value : "";
+                int x;
+                return match.Success ? (int.TryParse(match.Groups[1].Value, out x) ? match.Groups[1].Value : "" ) : "";
             }
-            return new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, "");
+            int x2;
+            return int.TryParse(new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, ""), out x2) ? new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, "") : "";
         }
         
         static string MatchItem(Bitmap image)
