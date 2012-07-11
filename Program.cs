@@ -21,12 +21,8 @@ namespace D3AHExtractor
             Console.WriteLine("Registering filesystem events.");
             watcher.BeginInit();
             watcher.EnableRaisingEvents = true;
-            //watcher.Created += WatcherOnCreated;
+            watcher.Created += WatcherOnCreated;
             watcher.EndInit();
-            //AnalyseFile(@"C:\Users\Deathmax\Documents\Diablo III\Screenshots\720p_crop.jpg");
-            //CropImage(new Bitmap(@"C:\Users\Deathmax\Documents\Diablo III\Screenshots\Screenshot012.jpg")).Save(@"C:\Users\Deathmax\Documents\Diablo III\Screenshots\Screenshot012_autocrop.tif", ImageFormat.Tiff);
-            //AnalyseFile(@"C:\Users\Deathmax\Documents\Diablo III\Screenshots\Screenshot012_autocrop.tif");
-            WatcherOnCreated(null, new FileSystemEventArgs(WatcherChangeTypes.Created, @"C:\Users\Deathmax\Documents\Diablo III\Screenshots", "Screenshot065.jpg"));
             while (true)
             {
                 Thread.Sleep(1000);
@@ -60,7 +56,7 @@ namespace D3AHExtractor
             Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price, File.GetCreationTimeUtc(e.FullPath));
             var writeline = string.Format("{0} - {1} - {2}\n",
                                           DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname, price);
-            //File.AppendAllText("priceinfo.txt", writeline);
+            File.AppendAllText("priceinfo.txt", writeline);
         }
 
         static string CropAndSave(string path)
@@ -90,7 +86,6 @@ namespace D3AHExtractor
             var md = new MODI.Document();
             md.Create(path);
             md.OCR(MiLANGUAGES.miLANG_ENGLISH);
-            //md.Close();
             return ((MODI.Image) md.Images[0]).Layout.Text;
         }
 
