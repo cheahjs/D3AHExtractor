@@ -19,7 +19,7 @@ namespace D3AHExtractor
 
         static void Main(string[] args)
         {
-            var path = args.Length == 0 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Diablo III\Screenshots" : args[1];
+            var path = args.Length == 0 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Diablo III\Screenshots" : args[0];
             Console.WriteLine("Registering filesystem events. ({0})", path);
             watcher = new FileSystemWatcher(path, "*.jpg");
             watcher.BeginInit();
@@ -38,7 +38,6 @@ namespace D3AHExtractor
             var croppath = CropAndSave(e.FullPath);
             var stream = File.OpenRead(croppath);
             var cropbmp = (Bitmap)Bitmap.FromStream(stream);
-            //var cropbmp = new Bitmap(croppath);
             var itemname = MatchItem(cropbmp);
             stream.Close();
             if (itemname == "")
