@@ -56,7 +56,6 @@ namespace D3AHExtractor
                 return;
             }
             var ocrtext = OCRFile(croppath);
-            Console.WriteLine(ocrtext);
             var price = GetPrice(ocrtext);
             if (price == "")
             {
