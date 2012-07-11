@@ -12,10 +12,10 @@ namespace D3AHExtractor
 {
     class Program
     {
-        private static Regex price = new Regex(@"last 10 trades: (\d+((,\d+)?(.\d+)?)?) p",
+        private static Regex price = new Regex(@"last 10 trades: (\d+((,\d+)?(.\d+)?)?) ",
                                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static Regex rmahprice = new Regex(@"last 10 trades: (\$\d+(,\d+)?\.\d+) p",
+        private static Regex rmahprice = new Regex(@"last 10 trades: (\$\d+(,\d+)?\.\d+) ",
                                                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static FileSystemWatcher watcher;
