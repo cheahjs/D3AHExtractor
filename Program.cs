@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using MODI;
 using System.IO;
-using AForge.Imaging;
 
 namespace D3AHExtractor
 {
@@ -15,7 +13,7 @@ namespace D3AHExtractor
         private static Regex price = new Regex(@"last 10 trades: (\d+((,\d+)?(.\d+)?)?) ",
                                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static Regex rmahprice = new Regex(@"last 10 trades: (([a-z]+)?\$\d+(,\d+)?\.\d+) ",
+        private static Regex rmahprice = new Regex(@"last 10 trades: (([a-z]+)?[\$-€]\d+(,\d+)?\.\d+) ",
                                                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static FileSystemWatcher watcher;
