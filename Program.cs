@@ -20,7 +20,8 @@ namespace D3AHExtractor
 
         private static FileSystemWatcher watcher;
 
-        private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
+        //private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
+        private static Rectangle Size = new Rectangle(398, 335, 550, 150);  // 1280x1024
 
         static void Main(string[] args)
         {
@@ -59,12 +60,14 @@ namespace D3AHExtractor
                     return;
                 }
                 var ocrtext = OCRFile(croppath);
+                Console.WriteLine("----------------------------");
+                Console.WriteLine(ocrtext);
+                Console.WriteLine("----------------------------");
                 var price = GetPrice(ocrtext);
                 if (price == "")
                 {
-                    Console.WriteLine("Could not extract price information from {0}({1}).\nOCR text:\n{2}",
-                                      Path.GetFileNameWithoutExtension(e.FullPath), itemname,
-                                      ocrtext);
+                    Console.WriteLine("Could not extract price information from {0}({1}).",
+                                      Path.GetFileNameWithoutExtension(e.FullPath), itemname);
                     return;
                 }
                 Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price,
@@ -125,9 +128,10 @@ namespace D3AHExtractor
         static string MatchItem(Bitmap image)
         {
             var image2 = image.Clone(new Rectangle(0, 0, image.Width, image.Height), PixelFormat.Format24bppRgb);
-            var files = Directory.GetFiles("items");
+            var files = Directory.GetFiles("items", "*.png", SearchOption.AllDirectories);
             foreach (var file in files)
             {
+                Console.WriteLine("Comparing to {0}", file);
                 var compare = new Bitmap(file);
                 compare = compare.Clone(new Rectangle(0, 0, compare.Width, compare.Height), PixelFormat.Format24bppRgb);
                 if (image2.Contains(compare))
