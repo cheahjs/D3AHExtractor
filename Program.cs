@@ -75,7 +75,6 @@ namespace D3AHExtractor
                 }
                 Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price,
                                   File.GetCreationTimeUtc(e.FullPath));
-                return;
                 var writeline = string.Format("{0} - {1} - {2}\n",
                                               DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname,
                                               price);
@@ -132,8 +131,8 @@ namespace D3AHExtractor
             if (!match.Success)
             {
                 match = rmahprice.Match(data);
-                int x;
-                return match.Success ? (int.TryParse(match.Groups[1].Value, out x) ? match.Groups[1].Value : "" ) : "";
+                double x;
+                return match.Success ? (double.TryParse(match.Groups[1].Value.Substring(1), out x) ? match.Groups[1].Value : "" ) : "";
             }
             int x2;
             return int.TryParse(new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, ""), out x2) ? new Regex(@"(\.)?(,)?").Replace(match.Groups[1].Value, "") : "";
