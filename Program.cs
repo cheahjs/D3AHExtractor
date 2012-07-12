@@ -45,24 +45,27 @@ namespace D3AHExtractor
 
         private static void WatcherOnCreated(object sender, FileSystemEventArgs e)
         {
+            Thread.Sleep(1000); //make sure file is fully writen
             try
             {
                 Console.WriteLine("New file created: {0}", Path.GetFileName(e.FullPath));
                 var croppath = CropAndSave(e.FullPath);
-                var stream = File.OpenRead(croppath);
-                var cropbmp = (Bitmap) Bitmap.FromStream(stream);
-                var itemname = MatchItem(cropbmp);
-                stream.Close();
-                if (itemname == "")
-                {
-                    Console.WriteLine("{0} does not match any known items.",
-                                      Path.GetFileNameWithoutExtension(e.FullPath));
-                    return;
-                }
+                File.Copy(croppath, croppath + ".tif");
                 var ocrtext = OCRFile(croppath);
                 Console.WriteLine("----------------------------");
                 Console.WriteLine(ocrtext);
                 Console.WriteLine("----------------------------");
+                var stream = File.OpenRead(croppath + ".tif");
+                var cropbmp = (Bitmap)Bitmap.FromStream(stream);
+                var itemname = MatchItem(cropbmp);
+                stream.Close();
+                File.Delete(croppath + ".tif");
+                if (itemname == "")
+                {
+                    itemname = Replace(ocrtext.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0], " ", "_");
+                    Console.WriteLine("{0} does not match any known items, using {1} as the name.",
+                                      Path.GetFileNameWithoutExtension(e.FullPath), itemname);
+                }
                 var price = GetPrice(ocrtext);
                 if (price == "")
                 {
@@ -72,6 +75,7 @@ namespace D3AHExtractor
                 }
                 Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price,
                                   File.GetCreationTimeUtc(e.FullPath));
+                return;
                 var writeline = string.Format("{0} - {1} - {2}\n",
                                               DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname,
                                               price);
@@ -80,6 +84,11 @@ namespace D3AHExtractor
             catch (Exception)
             {
             }
+        }
+
+        static string Replace(string data, string replace, string replacement)
+        {
+            return (new Regex(replace)).Replace(data, replacement);
         }
 
         static string CropAndSave(string path)
@@ -109,7 +118,12 @@ namespace D3AHExtractor
             var md = new MODI.Document();
             md.Create(path);
             md.OCR(MiLANGUAGES.miLANG_ENGLISH);
-            return ((MODI.Image) md.Images[0]).Layout.Text;
+            var imgs = md.Images;
+            var text = imgs[0].Layout.Text;
+            md.Close();
+            md = null;
+            imgs = null;
+            return text;
         }
 
         static string GetPrice(string data)
