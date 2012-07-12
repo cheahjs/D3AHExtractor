@@ -55,6 +55,13 @@ namespace D3AHExtractor
                 Console.WriteLine("----------------------------");
                 Console.WriteLine(ocrtext);
                 Console.WriteLine("----------------------------");
+                var price = GetPrice(ocrtext);
+                if (price == "")
+                {
+                    Console.WriteLine("Could not extract price information from {0}",
+                                      Path.GetFileNameWithoutExtension(e.FullPath));
+                    return;
+                }
                 var stream = File.OpenRead(croppath + ".tif");
                 var cropbmp = (Bitmap)Bitmap.FromStream(stream);
                 var itemname = MatchItem(cropbmp);
@@ -65,13 +72,6 @@ namespace D3AHExtractor
                     itemname = Replace(ocrtext.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0], " ", "_");
                     Console.WriteLine("{0} does not match any known items, using {1} as the name.",
                                       Path.GetFileNameWithoutExtension(e.FullPath), itemname);
-                }
-                var price = GetPrice(ocrtext);
-                if (price == "")
-                {
-                    Console.WriteLine("Could not extract price information from {0}({1}).",
-                                      Path.GetFileNameWithoutExtension(e.FullPath), itemname);
-                    return;
                 }
                 Console.WriteLine("{0} has a price of {1} as of {2}.", itemname, price,
                                   File.GetCreationTimeUtc(e.FullPath));
