@@ -17,10 +17,7 @@
  * along with D3AHExtractor.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 
@@ -35,21 +32,17 @@ namespace D3AHExtractor
 
             var etm = new ExhaustiveTemplateMatching(0.9f);
 
-            var tm = etm.ProcessImage(
-                new ResizeNearestNeighbor(template.Width/divisor, template.Height/divisor).Apply(template),
-                new ResizeNearestNeighbor(bmp.Width/divisor, bmp.Height/divisor).Apply(bmp)
-                );
+            var tm =
+                etm.ProcessImage(
+                    new ResizeNearestNeighbor(template.Width/divisor, template.Height/divisor).Apply(template),
+                    new ResizeNearestNeighbor(bmp.Width/divisor, bmp.Height/divisor).Apply(bmp));
 
             if (tm.Length == 1)
             {
                 Rectangle tempRect = tm[0].Rectangle;
 
-                if (Math.Abs(bmp.Width/divisor - tempRect.Width) < epsilon
-                    &&
-                    Math.Abs(bmp.Height/divisor - tempRect.Height) < epsilon)
-                {
+                if (Math.Abs(bmp.Width / divisor - tempRect.Width) < epsilon && Math.Abs(bmp.Height / divisor - tempRect.Height) < epsilon)
                     return true;
-                }
             }
 
             return false;
