@@ -19,6 +19,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using MODI;
@@ -36,8 +37,9 @@ namespace D3AHExtractor
 
         private static FileSystemWatcher watcher;
 
-        //private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
-        private static Rectangle Size = new Rectangle(398, 335, 550, 150);  // 1280x1024
+        private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
+        //private static Rectangle Size = new Rectangle(398, 183, 550, 150);  // 1280x720
+        //private static Rectangle Size = new Rectangle(398, 335, 550, 150);  // 1280x1024
 
         static void Main(string[] args)
         {
@@ -66,7 +68,6 @@ namespace D3AHExtractor
             {
                 Console.WriteLine("New file created: {0}", Path.GetFileName(e.FullPath));
                 var croppath = CropAndSave(e.FullPath);
-                File.Copy(croppath, croppath + ".tif");
                 var ocrtext = OCRFile(croppath);
                 Console.WriteLine("----------------------------");
                 Console.WriteLine(ocrtext);
@@ -78,11 +79,10 @@ namespace D3AHExtractor
                                       Path.GetFileNameWithoutExtension(e.FullPath));
                     return;
                 }
-                var stream = File.OpenRead(croppath + ".tif");
+                var stream = File.OpenRead(croppath);
                 var cropbmp = (Bitmap)Bitmap.FromStream(stream);
                 var itemname = MatchItem(cropbmp);
                 stream.Close();
-                File.Delete(croppath + ".tif");
                 if (itemname == "")
                 {
                     itemname = Replace(ocrtext.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0], " ", "_");
@@ -94,6 +94,7 @@ namespace D3AHExtractor
                 var writeline = string.Format("{0} - {1} - {2}\n",
                                               DateTimeToUnixTimestamp(File.GetCreationTimeUtc(e.FullPath)), itemname,
                                               price);
+                File.Delete(croppath);
                 File.AppendAllText("priceinfo.txt", writeline);
             }
             catch (Exception)
@@ -130,15 +131,27 @@ namespace D3AHExtractor
 
         static string OCRFile(string path)
         {
-            var md = new MODI.Document();
+            MODI.Document md = new MODI.Document();
             md.Create(path);
             md.OCR(MiLANGUAGES.miLANG_ENGLISH);
-            var imgs = md.Images;
-            var text = imgs[0].Layout.Text;
-            md.Close();
-            md = null;
-            imgs = null;
-            return text;
+            MODI.Images imgs = md.Images;
+            MODI.Image img = imgs[0];
+            MODI.Layout layout = img.Layout;
+            try
+            {
+                var text = layout.Text;
+                return text;
+            }
+            finally
+            {
+                md.Close(false);
+                Marshal.FinalReleaseComObject(md);
+                Marshal.FinalReleaseComObject(imgs);
+                Marshal.FinalReleaseComObject(img);
+                Marshal.FinalReleaseComObject(layout);
+                md = null;
+                GC.Collect();  
+            }
         }
 
         static string GetPrice(string data)
