@@ -17,6 +17,7 @@
  * along with D3AHExtractor.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -37,9 +38,16 @@ namespace D3AHExtractor
 
         private static FileSystemWatcher watcher;
 
-        private static Rectangle Size = new Rectangle(472, 388, 400, 100);  // 1280x1024 with letterboxing
-        //private static Rectangle Size = new Rectangle(398, 183, 550, 150);  // 1280x720
-        //private static Rectangle Size = new Rectangle(398, 335, 550, 150);  // 1280x1024
+        private static Dictionary<string, Rectangle> Sizes = new Dictionary<string, Rectangle>()
+            {
+                {"1280x1024w", new Rectangle(472, 388, 400, 100)},
+                {"1280x1024", new Rectangle(398, 335, 550, 150)},
+                {"1280x720", new Rectangle(398, 183, 550, 150)}
+            };
+
+        private static Rectangle Size = new Rectangle(0, 0, 0, 0);
+
+        private static bool ResetSize = true;
 
         static void Main(string[] args)
         {
@@ -48,6 +56,7 @@ namespace D3AHExtractor
             {
                 Size = new Rectangle(int.Parse(args[1].Split('x')[0]), int.Parse(args[1].Split('x')[1]),
                                      int.Parse(args[2].Split('x')[0]), int.Parse(args[2].Split('x')[1]));
+                ResetSize = false;
             }
             Console.WriteLine("Registering filesystem events. ({0})", path);
             watcher = new FileSystemWatcher(path, "*.jpg");
@@ -67,6 +76,8 @@ namespace D3AHExtractor
             try
             {
                 Console.WriteLine("New file created: {0}", Path.GetFileName(e.FullPath));
+                if (!SetSize(e.FullPath))
+                    return;
                 var croppath = CropAndSave(e.FullPath);
                 var ocrtext = OCRFile(croppath);
                 Console.WriteLine("----------------------------");
@@ -189,6 +200,47 @@ namespace D3AHExtractor
         static int DateTimeToUnixTimestamp(DateTime dateTime)
         {
             return (int)(dateTime - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds;
+        }
+
+        static bool SetSize(string path)
+        {
+            if (!ResetSize)
+                return true;
+            using (var bmp = new Bitmap(path))
+            {
+                var reso = GetResolution(bmp);
+                var result = Sizes.TryGetValue(reso, out Size);
+                Console.WriteLine(
+                    !result ? "Unable to find suitable points for {0}" : "Using predetermined points for {0}.", reso);
+                return result;
+            }
+        }
+
+        static string GetResolution(Bitmap bmp)
+        {
+            var widescreen = ((double) bmp.Size.Width/bmp.Size.Height).CompareTo(((double) 16/9)) == 0;
+            bool letterbox = true;
+            var threshold = 0;
+            if (!widescreen)
+            {
+                for (int i = 0;i < 20;i++)
+                {
+                    for (int j = 0; j < bmp.Size.Width - 1; j++)
+                    {
+                        var pixel = bmp.GetPixel(j, i);
+                        if (pixel.R != 0 || pixel.G != 0 || pixel.B != 0)
+                        {
+                            threshold++;
+                            if (threshold > 1000)
+                            {
+                                letterbox = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return string.Format("{0}x{1}{2}", bmp.Size.Width, bmp.Size.Height, letterbox ? "w" : "");
         }
     }
 }
